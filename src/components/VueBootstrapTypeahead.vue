@@ -16,8 +16,11 @@
         @focus="isFocused = true"
         @blur="handleBlur"
         @input="handleInput($event.target.value)"
+        @keyup.down="$emit('keyup.down', $event.target.value)"
+        @keyup.up="$emit('keyup.up', $event.target.value)"
+        @keyup.enter="$emit('keyup.enter', $event.target.value)"
         autocomplete="off"
-      />
+      >
       <div v-if="$slots.append || append" class="input-group-append">
         <slot name="append">
           <span class="input-group-text">{{ append }}</span>
@@ -37,23 +40,23 @@
       @hit="handleHit"
     >
       <!-- pass down all scoped slots -->
-      <template v-for="(slot, slotName) in $scopedSlots" :slot="slotName" slot-scope="{ data, htmlText }">
+      <template
+        v-for="(slot, slotName) in $scopedSlots"
+        :slot="slotName"
+        slot-scope="{ data, htmlText }"
+      >
         <slot :name="slotName" v-bind="{ data, htmlText }"></slot>
       </template>
-      <!-- below is the right solution, however if the user does not provide a scoped slot, vue will still set $scopedSlots.suggestion to a blank scope
-      <template v-if="$scopedSlots.suggestion" slot="suggestion" slot-scope="{ data, htmlText }">
-        <slot name="suggestion" v-bind="{ data, htmlText }" />
-      </template>-->
     </vue-bootstrap-typeahead-list>
   </div>
 </template>
 
 <script>
-import VueBootstrapTypeaheadList from './VueBootstrapTypeaheadList.vue'
-import ResizeObserver from 'resize-observer-polyfill'
+import VueBootstrapTypeaheadList from "./VueBootstrapTypeaheadList.vue";
+import ResizeObserver from "resize-observer-polyfill";
 
 export default {
-  name: 'VueBootstrapTypehead',
+  name: "VueBootstrapTypehead",
 
   components: {
     VueBootstrapTypeaheadList
@@ -63,7 +66,7 @@ export default {
     size: {
       type: String,
       default: null,
-      validator: size => ['lg', 'sm'].indexOf(size) > -1
+      validator: size => ["lg", "sm"].indexOf(size) > -1
     },
     value: {
       type: String
@@ -75,14 +78,14 @@ export default {
     },
     serializer: {
       type: Function,
-      default: (d) => d,
+      default: d => d,
       validator: d => d instanceof Function
     },
     backgroundVariant: String,
     textVariant: String,
     inputClass: {
       type: String,
-      default: ''
+      default: ""
     },
     maxMatches: {
       type: Number,
@@ -99,64 +102,64 @@ export default {
 
   computed: {
     sizeClasses() {
-      return this.size ? `input-group input-group-${this.size}` : 'input-group'
+      return this.size ? `input-group input-group-${this.size}` : "input-group";
     },
 
     formattedData() {
       if (!(this.data instanceof Array)) {
-        return []
+        return [];
       }
       return this.data.map((d, i) => {
         return {
           id: i,
           data: d,
           text: this.serializer(d)
-        }
-      })
+        };
+      });
     }
   },
 
   methods: {
     resizeList(el) {
-      const rect = el.getBoundingClientRect()
-      const listStyle = this.$refs.list.$el.style
+      const rect = el.getBoundingClientRect();
+      const listStyle = this.$refs.list.$el.style;
 
       // Set the width of the list on resize
-      listStyle.width = rect.width + 'px'
+      listStyle.width = rect.width + "px";
 
       // Set the margin when the prepend prop or slot is populated
       // (setting the "left" CSS property doesn't work)
       if (this.$refs.prependDiv) {
-        const prependRect = this.$refs.prependDiv.getBoundingClientRect()
-        listStyle.marginLeft = prependRect.width + 'px'
+        const prependRect = this.$refs.prependDiv.getBoundingClientRect();
+        listStyle.marginLeft = prependRect.width + "px";
       }
     },
 
     handleHit(evt) {
-      if (typeof this.value !== 'undefined') {
-        this.$emit('input', evt.text)
+      if (typeof this.value !== "undefined") {
+        this.$emit("input", evt.text);
       }
 
-      this.inputValue = evt.text
-      this.$emit('hit', evt.data)
-      this.$refs.input.blur()
-      this.isFocused = false
+      this.inputValue = evt.text;
+      this.$emit("hit", evt.data);
+      this.$refs.input.blur();
+      this.isFocused = false;
     },
 
     handleBlur(evt) {
-      const tgt = evt.relatedTarget
-      if (tgt && tgt.classList.contains('vbst-item')) {
-        return
+      const tgt = evt.relatedTarget;
+      if (tgt && tgt.classList.contains("vbst-item")) {
+        return;
       }
-      this.isFocused = false
+      this.isFocused = false;
     },
 
     handleInput(newValue) {
-      this.inputValue = newValue
+      this.inputValue = newValue;
 
       // If v-model is being used, emit an input event
-      if (typeof this.value !== 'undefined') {
-        this.$emit('input', newValue)
+      if (typeof this.value !== "undefined") {
+        this.$emit("input", newValue);
       }
     }
   },
@@ -164,30 +167,36 @@ export default {
   data() {
     return {
       isFocused: false,
-      inputValue: ''
-    }
+      inputValue: this.value
+    };
   },
 
   mounted() {
     this.$_ro = new ResizeObserver(e => {
-      this.resizeList(this.$refs.input)
-    })
-    this.$_ro.observe(this.$refs.input)
-    this.$_ro.observe(this.$refs.list.$el)
+      this.resizeList(this.$refs.input);
+    });
+    this.$_ro.observe(this.$refs.input);
+    this.$_ro.observe(this.$refs.list.$el);
+  },
+
+  watch: {
+    value(newValue) {
+      this.inputValue = newValue;
+    }
   },
 
   beforeDestroy() {
-    this.$_ro.disconnect()
+    this.$_ro.disconnect();
   }
-}
+};
 </script>
 
 <style scoped>
-  .vbt-autcomplete-list {
-    padding-top: 5px;
-    position: absolute;
-    max-height: 350px;
-    overflow-y: auto;
-    z-index: 999;
-  }
+.vbt-autcomplete-list {
+  padding-top: 5px;
+  position: absolute;
+  max-height: 350px;
+  overflow-y: auto;
+  z-index: 999;
+}
 </style>
