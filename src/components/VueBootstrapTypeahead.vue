@@ -96,6 +96,7 @@ export default {
       default: 2
     },
     placeholder: String,
+    default: String,
     prepend: String,
     append: String
   },
@@ -167,7 +168,7 @@ export default {
   data() {
     return {
       isFocused: false,
-      inputValue: this.value
+      inputValue: this.default || this.value
     };
   },
 

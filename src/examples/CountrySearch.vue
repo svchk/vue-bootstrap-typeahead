@@ -8,6 +8,7 @@
       v-model="cntrySearch"
       :serializer="s => s.name"
       placeholder="Canada, United States, etc..."
+      default="Russian Federation"
       @hit="handleHit"
     >
       <template slot="append">
